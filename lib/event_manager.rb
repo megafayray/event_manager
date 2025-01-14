@@ -24,6 +24,19 @@ def clean_phone_number(homephone)
   end
 end
 
+hours_hash = (0..23).each_with_object({}) { |hour, hash| hash[hour] ||= 0 }
+#needed to be outside of most_popular_hour method so that the values weren't reset
+#to zero each time the method was called
+
+def most_popular_hour(hour, hours_hash)
+  hours_hash[hour] += 1#find the matching hour in the hash and augment the value by one
+ 
+ @best = hours_hash.max_by { |k,v| v }[0]
+ #max_by gives an array with the key and value
+ #using [0] targets the key
+  
+end
+
 def legislators_by_zipcode(zip)
   civic_info = Google::Apis::CivicinfoV2::CivicInfoService.new
   civic_info.key = 'AIzaSyClRzDqDh5MsXwnCWi0kOiiBivP6JsSyBw'
@@ -67,9 +80,16 @@ contents.each do |row|
   legislators = legislators_by_zipcode(zipcode)
   phone = clean_phone_number(row[:homephone])
 
-  puts "#{id}, #{name}, #{zipcode}, #{phone}"
+  date = DateTime.strptime(row[:regdate],'%m/%d/%y %H:%M')
+  hour = date.hour
 
-  # form_letter = erb_template.result(binding)
+  most_popular_hour(hour, hours_hash)
 
-  # save_thank_you_letter(id,form_letter)
+  puts "#{id}, #{name}, #{zipcode}, #{phone}, #{hour}"
+
+  form_letter = erb_template.result(binding)
+
+  save_thank_you_letter(id,form_letter)
 end
+
+puts "#{@best} is the peak registration hour"
