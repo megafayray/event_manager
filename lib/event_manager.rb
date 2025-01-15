@@ -31,10 +31,20 @@ hours_hash = (0..23).each_with_object({}) { |hour, hash| hash[hour] ||= 0 }
 def most_popular_hour(hour, hours_hash)
   hours_hash[hour] += 1#find the matching hour in the hash and augment the value by one
  
- @best = hours_hash.max_by { |k,v| v }[0]
+ @best_hour = hours_hash.max_by { |k,v| v }[0]
  #max_by gives an array with the key and value
  #using [0] targets the key
   
+end
+
+days_hash = (0..6).each_with_object({}) { |day, hash| hash[day] ||= 0 }
+
+def most_popular_day(day_of_week, days_hash)
+  days_hash[day_of_week] += 1
+  @best_day = days_hash.max_by { |k,v| v }[0]
+  days = {0 => "Sunday", 1 => "Monday", 2 => "Tuesday", 3 => "Wednesday", 
+          4 => "Thursday", 5 => "Friday", 6 => "Saturday"}
+  @print_best_day = days[@best_day] if days.key?(@best_day)
 end
 
 def legislators_by_zipcode(zip)
@@ -82,14 +92,18 @@ contents.each do |row|
 
   date = DateTime.strptime(row[:regdate],'%m/%d/%y %H:%M')
   hour = date.hour
+  day_of_week = date.wday
 
   most_popular_hour(hour, hours_hash)
 
-  puts "#{id}, #{name}, #{zipcode}, #{phone}, #{hour}"
+  most_popular_day(day_of_week, days_hash)
+
+  puts "#{id}, #{name}, #{zipcode}, #{phone}, #{hour}, #{day_of_week}"
 
   form_letter = erb_template.result(binding)
 
   save_thank_you_letter(id,form_letter)
 end
 
-puts "#{@best} is the peak registration hour"
+puts "#{@best_hour} is the peak registration hour"
+puts "#{@print_best_day} is the peak registration day"
